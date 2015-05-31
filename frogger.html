@@ -1,0 +1,413 @@
+
+<!-- saved from url=(0042)http://martinderouet.com/MyFolder/frogger/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<style type="text/css"></style></head>
+<body>
+	<canvas width="450" height="455" id="board" style="border: 1px solid black"></canvas>
+	<script type="text/javascript">
+		//Ici toutes les variables globales sont énoncées.
+//Fonction qui génere une couleur aléatoire
+
+
+var X_NENU = 45;
+var Y_NENU = 35;
+var time = 0;
+var tempsEcoule = 60;
+
+
+var nb = Math.floor((Math.random() * 35)+ 25);
+var RECT_WIDTH = 75;
+var CAR_WIDTH = 40;
+var RECT_HEIGHT = 25;
+var frog;
+var X_FROG = 212;
+var Y_FROG = 425;
+		var WIDTH_FROG = 25; //Global variable
+		var HEIGHT_FROG = 25;
+		var COLOR_FROG = 'yellow';
+		var DECALAGE = 35; //décalage lors du key event
+		var NB_VIE = 3;
+		var CAR_COLOR = 'red';
+		var RONDIN_COLOR = 'brown';
+		var SPACE_CAR = 120;
+		var NB_CAR = 3;
+		var NB_RONDIN = 2;
+		var NB_LANE = 5;
+		var VITESSE;
+		var DIRECT;
+		var elem = document.getElementById('board');
+		var context = elem.getContext("2d");
+		var CAR_ARRAY;
+		var RONDIN_ARRAY;
+		var LANE_ARRAY;
+		var BOARD_WIDTH = elem.getAttribute('width');
+		var BOARD_HEIGHT = elem.getAttribute('height');
+		var boucleJeu;
+		//Ici : le code qui sera exécuté
+		window.addEventListener('keydown', onKeyPressed); // Keyboard listener
+		game();
+		//A partir d'ici, il n'y a que des fonctions
+		//L'objet Figure qui a nous servir de base pour les objets suivants.
+		function game() {
+			frog = new Figure(context, X_FROG, Y_FROG, WIDTH_FROG, HEIGHT_FROG,
+				COLOR_FROG);
+			LaneRondin();
+			LaneCar();
+
+		}
+
+
+
+		function getRandomColor() {
+			var letters = '0123456789ABCDEF'.split('');
+			var color = '#';
+			for (var i = 0; i < 6; i++ ) {
+				color += letters[Math.round(Math.random() * 15)];
+			}
+			return color;
+		}
+		function restart() {
+			frog = new Figure(context, X_FROG, Y_FROG, WIDTH_FROG, HEIGHT_FROG,
+				COLOR_FROG);
+		}
+		function restartGame() {
+			NB_VIE = 4;
+			clearInterval(boucleJeu);
+			boucleJeu = setInterval(movement, 30);
+		}
+		var boucleJeu = setInterval(movement, 30);
+
+		function Figure(context, x, y, width, height, color) {
+			this.context = context;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			this.color = color;
+			var imgFrog = new Image();
+			imgFrog.src = 'img/frog.png';
+			this.draw = function() {
+				context.drawImage(imgFrog, this.x, this.y);
+			};
+		}
+		//L'objet Car, qui est le même que l'objet figure mais qui prend une direction et une vitesse en plus.
+		function Car(context, x, y, width, height, color, direction, speed) {
+			this.context = context;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			this.color = color;
+			this.direction = direction;
+			this.speed = speed;
+			var imgCarGauche = new Image();
+			imgCarGauche.src = 'img/CarGauche.png';
+			var imgCarDroite = new Image();
+			imgCarDroite.src = 'img/CarDroite.png';
+			this.draw = function() {
+				if (this.direction == 1){
+					context.drawImage(imgCarGauche, this.x, this.y);
+				}else {
+					context.drawImage(imgCarDroite, this.x, this.y);
+				}
+
+			}
+		};
+		
+		//L'objet Rondin qui est le même que le Car, mais qui sera surement nécessaire de différencier pour la suite.
+		function Rondin(context, x, y, width, height, color, direction, speed) {
+			this.context = context;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			this.color = color;
+			this.direction = direction;
+			this.speed = speed;
+			var imgRondin = new Image();
+			imgRondin.src = 'img/Rondin2.png';
+			this.draw = function() {
+				context.drawImage(imgRondin, this.x, this.y);
+			};
+		}
+		//Fonction permettant d'obtenir une vitesse aléatoire comprise entre deux valeurs placées en paramètres.
+		function getSpeed(valMin, valMax) {
+			this.valMin = valMin;
+			this.valMax = valMax;
+			return (Math.floor((this.valMax - this.valMin) * Math.random()) + this.valMin);
+		}
+		//Fonction permettant l'aléatoire pour la direction en renvoyant 0 ou 1.
+		function getDirection() {
+			return (Math.floor(Math.random() * 2));
+		}
+
+		//Fonction (pas du tout optimisée) pour afficher la board.
+		function drawBoard(context) {
+
+			var herbe = new Image();
+			herbe.src = 'img/herbe.png';
+			var eau = new Image();
+			eau.src = 'img/eau.png';
+			var route = new Image();
+			route.src = 'img/route.png';
+			var route2 = new Image();
+			route2.src = 'img/route2.png';
+			var imgNenu = new Image();
+			imgNenu.src = 'img/nenu.gif';
+			context.drawImage(eau, 0, 0);
+			context.drawImage(herbe, 0, 210);
+			context.drawImage(route, 0, 245);
+			context.drawImage(route, 0, 315);
+			context.drawImage(route2, 0, 385);
+			context.drawImage(herbe, 0, 420);
+			context.drawImage(imgNenu, 60, 0);
+			context.drawImage(imgNenu, 190, 0);
+			context.drawImage(imgNenu, 320, 0);
+
+
+
+		}
+		//La fonction pour lire les touches qui sont utilisées.
+		function onKeyPressed(evt) {
+			switch (evt.keyCode) {
+			// FLeche gauche
+			case 37:
+			frog.x = frog.x - DECALAGE;
+			if (frog.x < (5))
+				frog.x = 5;
+			break;
+			// Fleche droite
+			case 39:
+			frog.x = frog.x + DECALAGE;
+			if (frog.x > 420)
+				frog.x = 420;
+			break;
+			// Fleche haut
+			case 38:
+			frog.y = frog.y - DECALAGE;
+			if (frog.y < 5)
+				frog.y = 5;
+			break;
+			// Fleche bas
+			case 40:
+			frog.y = frog.y + DECALAGE;
+			if (frog.y > 425)
+				frog.y = (425);
+			break;
+
+			case 32:
+			location.reload() ;
+			break;
+				//bar espace
+			}
+		}
+		//On crée un tableau de tableau pour stocker les voitures de chaques lignes.
+		function LaneCar() {
+			CAR_ARRAY = new Array();
+			for (var i = 0; i < NB_LANE; i++) {
+				CAR_ARRAY[i] = new Array();
+				for (var j = 0; j < NB_CAR; j++) {
+					//La condition permet de ne pas avoir de vitesse ni de direction différentes sur une même ligne.
+					if (j > 0) {
+						CAR_ARRAY[i][j] = new Car(context, (-CAR_WIDTH - j
+							* SPACE_CAR), (250 + (i * 35)), CAR_WIDTH,
+						RECT_HEIGHT, getRandomColor(),
+						CAR_ARRAY[i][0].direction,
+						CAR_ARRAY[i][0].speed);
+					} else {
+						CAR_ARRAY[i][j] = new Car(context, (-CAR_WIDTH - j
+							* SPACE_CAR), (250 + (i * 35)), CAR_WIDTH,
+						RECT_HEIGHT, getRandomColor(), getDirection(),
+						getSpeed((0,5), 1));
+					}
+					if (CAR_ARRAY[i][j].direction == 1) {
+						CAR_ARRAY[i][j].x = 450 + (j * SPACE_CAR);
+					}
+				}
+			}
+			CAR_ARRAY.draw = function() {
+				for (var i = 0; i < NB_LANE; i++) {
+					for (var j = 0; j < NB_CAR; j++) {
+						CAR_ARRAY[i][j].draw();
+					}
+				}
+			};
+		}
+		//Même fonction que pour le tableau de voitures, mais pour les rondins de bois
+		function LaneRondin() {
+			RONDIN_ARRAY = new Array();
+			for (var i = 0; i < NB_LANE; i++) {
+				RONDIN_ARRAY[i] = new Array();
+				for (var j = 0; j < NB_RONDIN; j++) {
+					if (j > 0) {
+						RONDIN_ARRAY[i][j] = new Rondin(context,
+							(-RECT_WIDTH - j * SPACE_CAR), (40 + (i * 35)),
+							RECT_WIDTH, RECT_HEIGHT, RONDIN_COLOR,
+							RONDIN_ARRAY[i][0].direction,
+							RONDIN_ARRAY[i][0].speed);
+					} else {
+						RONDIN_ARRAY[i][j] = new Rondin(context,
+							(-RECT_WIDTH - j * SPACE_CAR), (40 + (i * 35)),
+							RECT_WIDTH, RECT_HEIGHT, RONDIN_COLOR,
+							getDirection(), getSpeed((0,3), 1));
+					}
+					if (RONDIN_ARRAY[i][j].direction == 1) {
+						RONDIN_ARRAY[i][j].x = 450 + (j * SPACE_CAR);
+					}
+				}
+			}
+			RONDIN_ARRAY.draw = function() {
+				for (var i = 0; i < NB_LANE; i++) {
+					for (var j = 0; j < NB_RONDIN; j++) {
+						RONDIN_ARRAY[i][j].draw();
+					}
+				}
+			};
+		}
+		//Fonction pour tester les collisions des voitures avec la grenouille.
+		function collision() {
+			for (var i = 0; i < NB_LANE; i++) {
+				for (var j = 0; j < NB_CAR; j++) {
+					if (frog.y == CAR_ARRAY[i][j].y
+						&& frog.x > CAR_ARRAY[i][j].x
+						&& frog.x < (CAR_ARRAY[i][j].x + CAR_WIDTH)
+						|| frog.y == CAR_ARRAY[i][j].y
+						&& (frog.x + WIDTH_FROG) < (CAR_ARRAY[i][j].x + CAR_WIDTH)
+						&& (frog.x + WIDTH_FROG) > CAR_ARRAY[i][j].x) {
+						clearContext(context, 0, 0, BOARD_WIDTH, BOARD_HEIGHT);
+					NB_VIE -= 1;
+
+					if(NB_VIE > 0){
+						alert("Game Over : Il vous reste " + NB_VIE + " vie(s)");
+					}
+
+					if (NB_VIE == 0) {
+						clearInterval(boucleJeu);
+						lose();
+					} else {
+						restart();
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	function vousEtesUnRondin(){
+		if (frog.y < 210 && frog.y > 35) {
+				//Peut être mort
+				for (var i = 0; i < NB_LANE; i++) {
+					for (var j = 0; j < NB_RONDIN; j++) {
+							//Test pour savoir si la frog est sur le rondin.
+							var currentRondin = RONDIN_ARRAY[i][j];
+							if (frog.y == currentRondin.y && frog.x >= currentRondin.x && frog.x + WIDTH_FROG <= (currentRondin.x + RECT_WIDTH)) {
+								VITESSE = currentRondin.speed;
+								DIRECT = currentRondin.direction;
+								return true;
+							}
+						}
+					}
+				}
+				return false;
+			}
+			function lose() {
+				document.write("<img src= gameOver.jpg />");
+				clearInterval(boucleJeu);
+			}
+			function win(){
+			//WIN="vous avez gagné, F5 pour rejouer";
+			document.write("<img src= youWon.jpg />");
+			clearInterval(boucleJeu);
+		}
+		function noyade() {
+			if (frog.y < 210 && frog.y > 35){
+				var result = vousEtesUnRondin();
+				if(!result) {
+					clearContext(context, 0, 0, BOARD_WIDTH, BOARD_HEIGHT);
+					NB_VIE -= 1;
+					alert("Game Over : Il vous reste " + NB_VIE + " vie(s)");
+					if (NB_VIE == 0) {
+						clearInterval(boucleJeu);
+						lose();
+						//alert("Tu as perdu , t'es une grosse merde");
+						//restartGame();
+					} else {
+						restart();
+					}
+				}else {
+
+					if (DIRECT == 0){
+						frog.x += VITESSE;
+					}else if(DIRECT == 1){
+						frog.x -= VITESSE;
+					}
+				}
+			}
+		}
+		//Fonction qui permet d'effacer la board.
+		function clearContext(context, x, y, width, height) {
+			context.clearRect(x, y, width, height);
+		}
+		//La Fonction qui permet le mouvement et qui est rappelée par le setInterval, elle efface la board,
+		//puis la réaffiche, puis fait déplacer les voitures/rondins, en fonction de leur vitesse et direction
+		function movement() {
+			time += 0.03;
+			if(time > tempsEcoule){
+				document.write("<img src= gameOver.jpg />");
+				clearInterval(boucleJeu);
+			}
+			clearContext(context, 0, 0, BOARD_WIDTH, BOARD_HEIGHT);
+			drawBoard(context);
+			for (var i = 0; i < NB_LANE; i++) {
+				for (var j = 0; j < NB_CAR; j++) {
+					if (CAR_ARRAY[i][j].direction == 0) {
+						CAR_ARRAY[i][j].x += CAR_ARRAY[i][j].speed;
+						//cette condition permet a l'objet de se réafficher de l'autre coté quand elle sort du canvas
+						if (CAR_ARRAY[i][j].x >= BOARD_WIDTH) {
+							CAR_ARRAY[i][j].x = -CAR_ARRAY[i][j].width;
+						}
+					} else if (CAR_ARRAY[i][j].direction == 1) {
+						CAR_ARRAY[i][j].x -= CAR_ARRAY[i][j].speed;
+						if (CAR_ARRAY[i][j].x <= -CAR_WIDTH) {
+							CAR_ARRAY[i][j].x = BOARD_WIDTH;
+						}
+					}
+					CAR_ARRAY[i][j].draw();
+				}
+			}
+			for (var i = 0; i < NB_LANE; i++) {
+				for (var j = 0; j < NB_RONDIN; j++) {
+					if (RONDIN_ARRAY[i][j].direction == 0) {
+						RONDIN_ARRAY[i][j].x += RONDIN_ARRAY[i][j].speed;
+						if (RONDIN_ARRAY[i][j].x >= BOARD_WIDTH) {
+							RONDIN_ARRAY[i][j].x = -RONDIN_ARRAY[i][j].width;
+						}
+					} else if (RONDIN_ARRAY[i][j].direction == 1) {
+						RONDIN_ARRAY[i][j].x -= RONDIN_ARRAY[i][j].speed;
+						if (RONDIN_ARRAY[i][j].x <= -RECT_WIDTH) {
+							RONDIN_ARRAY[i][j].x = BOARD_WIDTH;
+						}
+					}
+					RONDIN_ARRAY[i][j].draw();
+				}
+			}
+			frog.draw();
+			collision();
+			noyade();
+
+			if (frog.y < 35) {
+				if ((((frog.x > 50) && ((frog.x + CAR_WIDTH) < 140))
+					|| ((frog.x > 180) && ((frog.x + CAR_WIDTH) < 270))
+					|| ((frog.x > 310) && ((frog.x + CAR_WIDTH) < 410))))
+				{
+					win();
+				}
+				else {
+					lose();
+				}
+			}
+
+		}
+		</script>
+	
+	</body></html>
